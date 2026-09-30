@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Producto } from './producto.entity';
 import { CrearProductoDto } from './dto/crear-producto.dto';
 import { ActualizarPrecioDto } from './dto/actualizar-precio.dto';
+import { LessThanOrEqual, Repository } from 'typeorm';
 
 @Injectable()
 export class ProductosService {
@@ -20,6 +20,14 @@ export class ProductosService {
     const producto = await this.repo.findOneBy({ id });
     if (!producto) throw new NotFoundException(`Producto ${id} no existe`);
     return producto;
+
+  }
+    // Filtro: productos con precio menor o igual al límite indicado.
+  findBaratos(precioMaximo: number): Promise<Producto[]> {
+    return this.repo.find({
+      where: { precio: LessThanOrEqual(precioMaximo) },
+      order: { id: 'ASC' },
+    });
   }
 
   // POST: la base genera el id con la secuencia SERIAL.

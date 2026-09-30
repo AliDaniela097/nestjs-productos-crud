@@ -6,6 +6,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductosModule } from './productos/productos.module';
 import { Producto } from './productos/producto.entity';
 import { ConfigController } from './config.controller';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 
 @Module({
   imports: [
@@ -16,7 +19,7 @@ import { ConfigController } from './config.controller';
     // exclude evita que se trague las rutas de la API y de Swagger.
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      exclude: ['/api/{*splat}', '/swagger/{*splat}'],
+      exclude: ['/api/{*splat}', '/swagger/{*splat}', '/graphql', '/graphql/{*splat}'],
     }),
 
     // Conexion a PostgreSQL. Ningun dato sensible va escrito aqui:
@@ -35,7 +38,18 @@ import { ConfigController } from './config.controller';
       // Azure y la mayoria de Postgres gestionados exigen SSL
       ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     }),
-
+        // GraphQL code-first: Nest genera schema.gql a partir de los decoradores.
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile:
+        process.env.NODE_ENV === 'production'
+          ? true
+          : join(process.cwd(), 'schema.gql'),
+      sortSchema: true,
+      playground: false,
+      introspection: true,
+      plugins: [ApolloServerPluginLandingPageLocalDefault()],
+    }),
     ProductosModule,
   ],
   controllers: [ConfigController],
