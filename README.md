@@ -67,6 +67,35 @@ PostgREST filtra por parámetros de consulta en vez de usar la ruta:
 Las dos APIs no devuelven los mismos códigos en todos los casos. La comparación completa y el porqué están en la sección 3 de [`bitacora.md`](./bitacora.md).
 
 ---
+## API GraphQL (Semana 4)
+
+GraphQL expone **un solo endpoint** (`/graphql`) en el mismo servicio de NestJS. El cliente elige exactamente los campos que necesita. En producción: <https://productos-api-v0q0.onrender.com/graphql>
+
+| Query | Qué devuelve |
+| ----- | ------------ |
+| `productos` | Todos los productos |
+| `productosBaratos(precioMaximo: Float!)` | Productos con precio menor o igual al límite |
+
+Ejemplo:
+
+```graphql
+query {
+  productosBaratos(precioMaximo: 20) {
+    nombre
+    precio
+  }
+}
+```
+
+**Arquitectura.** El resolver GraphQL y el controller REST son dos adaptadores sobre el mismo servicio y la misma base de datos:
+
+```
+ProductosController (REST)  ┐
+                            ├→ ProductosService → PostgreSQL
+ProductosResolver (GraphQL) ┘
+```
+
+El filtro `productosBaratos` se ejecuta en la base de datos (`WHERE precio <= límite`), no en memoria.
 
 ## Pruebas
 
@@ -83,15 +112,14 @@ Ejecuta 19 casos: las 8 filas de la matriz del Paso 7, 4 casos adicionales de Ne
 ## Estructura
 
 ```
-src/
-├── main.ts                        # bootstrap, ValidationPipe global, CORS y Swagger
-├── app.module.ts                  # conexión a PostgreSQL y servido del frontend
 └── productos/
     ├── dto/
-    │   ├── crear-producto.dto.ts      # POST y PUT: nombre + precio
-    │   └── actualizar-precio.dto.ts   # PATCH: solo precio
+    │   ├── crear-producto.dto.ts
+    │   └── actualizar-precio.dto.ts
     ├── producto.entity.ts         # entidad TypeORM -> tabla api.productos
-    ├── productos.controller.ts    # los 6 endpoints
+    ├── producto.model.ts          # tipo GraphQL (@ObjectType)
+    ├── productos.controller.ts    # los 6 endpoints REST
+    ├── productos.resolver.ts      # queries GraphQL
     ├── productos.service.ts       # lógica de negocio contra la base
     └── productos.module.ts
 
