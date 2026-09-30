@@ -1,5 +1,8 @@
 # API de Productos — Semana 2, Integración de Sistemas
 
+> **Si abres la versión desplegada:** el plan gratuito de Render duerme los servicios tras un rato sin uso, así que **la primera carga puede tardar cerca de un minuto**. Si el botón *PostgREST* falla al inicio, espera unos segundos y vuelve a intentarlo: son dos servicios y despiertan por separado.
+
+
 CRUD completo de productos sobre **PostgreSQL**, expuesto por **dos mecanismos de integración** que comparten la misma tabla:
 
 - **API REST en NestJS**, escrita a mano: DTOs con validación, códigos de estado explícitos, cabecera `Location` y enlaces HATEOAS.
@@ -93,8 +96,11 @@ src/
     └── productos.module.ts
 
 public/index.html      # frontend de una sola página, sin dependencias
-db/init.sql            # esquema, datos iniciales y roles de PostgREST
+db/init.sql            # esquema y roles para el entorno local (Docker)
+db/init-neon.sql       # equivalente para Neon (la nube)
 docker-compose.yml     # PostgreSQL + PostgREST
+render.yaml            # blueprint de despliegue en Render
+DESPLIEGUE.md          # guía paso a paso para publicarlo en la nube
 contrato.md            # contrato API-first
 bitacora.md            # bitácora, comparación y declaración de uso de IA
 pruebas-matriz.sh      # matriz de pruebas automatizada

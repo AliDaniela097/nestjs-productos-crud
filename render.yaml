@@ -1,0 +1,71 @@
+# =====================================================================
+# Blueprint de Render - despliegue de los dos servicios
+#
+# La base de datos NO se declara aqui: vive en Neon, porque el
+# PostgreSQL gratuito de Render expira a los 30 dias.
+#
+# Las variables marcadas con "sync: false" NO se guardan en el
+# repositorio: Render las pide al crear el blueprint y quedan
+# cifradas en su panel. Ahi van las credenciales.
+# =====================================================================
+
+services:
+
+  # -------------------------------------------------------------
+  # 1. API de NestJS + frontend
+  # -------------------------------------------------------------
+  - type: web
+    name: productos-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /api/v1/productos
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Neon siempre exige conexion cifrada
+      - key: DB_SSL
+        value: "true"
+      - key: DB_NAME
+        value: neondb
+      # Datos de conexion de Neon (se ingresan en el panel de Render)
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # URL publica del servicio de PostgREST, para el frontend.
+      # Se completa DESPUES del primer despliegue, cuando Render ya
+      # asigno la direccion del otro servicio.
+      - key: POSTGREST_URL
+        sync: false
+
+  # -------------------------------------------------------------
+  # 2. PostgREST (imagen oficial, sin codigo propio)
+  # -------------------------------------------------------------
+  - type: web
+    name: productos-postgrest
+    runtime: image
+    plan: free
+    region: oregon
+    image:
+      url: docker.io/postgrest/postgrest:v12.2.3
+    envVars:
+      # PostgREST escucha en el puerto que Render le indique
+      - key: PGRST_SERVER_PORT
+        value: "10000"
+      - key: PORT
+        value: "10000"
+      - key: PGRST_DB_SCHEMAS
+        value: api
+      - key: PGRST_DB_ANON_ROLE
+        value: web_anon
+      # Cadena de conexion completa a Neon con el rol authenticator.
+      # Debe terminar en ?sslmode=require
+      - key: PGRST_DB_URI
+        sync: false

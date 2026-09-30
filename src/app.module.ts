@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductosModule } from './productos/productos.module';
 import { Producto } from './productos/producto.entity';
+import { ConfigController } from './config.controller';
 
 @Module({
   imports: [
@@ -37,5 +38,6 @@ import { Producto } from './productos/producto.entity';
 
     ProductosModule,
   ],
+  controllers: [ConfigController],
 })
 export class AppModule {}
