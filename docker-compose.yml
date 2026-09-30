@@ -1,0 +1,62 @@
+# =====================================================================
+# Semana 2 - Integracion de Sistemas
+#
+# Levanta los dos servicios de infraestructura:
+#   - db       : PostgreSQL 16, la unica fuente de datos
+#   - postgrest: API REST generada automaticamente desde el esquema
+#
+# La aplicacion de NestJS NO va aqui: se ejecuta aparte con
+# "npm run start:dev" para poder desarrollar con recarga automatica.
+#
+#   docker compose up -d      levantar
+#   docker compose ps         ver estado
+#   docker compose logs -f    ver registros
+#   docker compose down       detener
+#   docker compose down -v    detener Y BORRAR los datos
+# =====================================================================
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    container_name: productos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: clave_postgres
+      POSTGRES_DB: productos_db
+    ports:
+      # host:contenedor -> se usa 5433 en el host para no chocar con un
+      # PostgreSQL que ya estuviera instalado en la maquina.
+      - "5433:5432"
+    volumes:
+      # Todo archivo .sql de esta carpeta se ejecuta SOLO la primera vez,
+      # cuando el volumen de datos esta vacio.
+      - ./db:/docker-entrypoint-initdb.d:ro
+      - datos_productos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d productos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgrest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: productos_postgrest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      # PostgREST se conecta con "authenticator", el rol sin permisos
+      # propios creado en db/init.sql. Dentro de la red de Docker el
+      # host de la base es "db" y el puerto es el interno, 5432.
+      PGRST_DB_URI: postgres://authenticator:clave_authenticator@db:5432/productos_db
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_OPENAPI_SERVER_PROXY_URI: http://localhost:3001
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  datos_productos:

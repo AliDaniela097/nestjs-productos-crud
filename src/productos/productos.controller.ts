@@ -34,8 +34,8 @@ export class ProductosController {
   @ApiOperation({ summary: 'Obtener un producto por id (con enlaces HATEOAS)' })
   @ApiResponse({ status: 200, description: 'Producto encontrado con _links.' })
   @ApiResponse({ status: 404, description: 'El producto no existe.' })
-  obtener(@Param('id', ParseIntPipe) id: number) {
-    const producto = this.productosService.findOne(id);
+  async obtener(@Param('id', ParseIntPipe) id: number) {
+    const producto = await this.productosService.findOne(id);
     // HATEOAS (nivel 3 de Richardson): la respuesta indica las acciones posibles.
     return {
       ...producto,
@@ -59,11 +59,11 @@ export class ProductosController {
   @ApiOperation({ summary: 'Crear un producto' })
   @ApiResponse({ status: 201, description: 'Creado. Incluye header Location.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
-  crear(
+  async crear(
     @Body() dto: CrearProductoDto,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const nuevo = this.productosService.crear(dto);
+    const nuevo = await this.productosService.crear(dto);
     res.setHeader('Location', `/api/v1/productos/${nuevo.id}`);
     return nuevo;
   }
@@ -74,11 +74,13 @@ export class ProductosController {
   @ApiResponse({ status: 204, description: 'Reemplazado, sin cuerpo.' })
   @ApiResponse({ status: 400, description: 'Datos inválidos.' })
   @ApiResponse({ status: 404, description: 'El producto no existe.' })
-  reemplazar(
+  async reemplazar(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: CrearProductoDto,
   ) {
-    this.productosService.reemplazar(id, dto); // 204: sin cuerpo
+    // El await es obligatorio: sin el, un 404 del servicio quedaria como
+    // promesa rechazada sin capturar y tumbaria el proceso de Node.
+    await this.productosService.reemplazar(id, dto); // 204: sin cuerpo
   }
 
   @Patch(':id')
@@ -98,7 +100,7 @@ export class ProductosController {
   @ApiOperation({ summary: 'Eliminar un producto' })
   @ApiResponse({ status: 204, description: 'Eliminado, sin cuerpo.' })
   @ApiResponse({ status: 404, description: 'El producto no existe.' })
-  eliminar(@Param('id', ParseIntPipe) id: number) {
-    this.productosService.eliminar(id); // 204
+  async eliminar(@Param('id', ParseIntPipe) id: number) {
+    await this.productosService.eliminar(id); // 204
   }
 }

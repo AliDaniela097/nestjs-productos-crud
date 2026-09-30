@@ -1,4 +1,7 @@
 node_modules/
 dist/
 *.log
+
+# Credenciales: nunca se suben. Se comparte .env.example en su lugar.
 .env
+.env.local

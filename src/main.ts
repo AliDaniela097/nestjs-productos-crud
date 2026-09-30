@@ -6,6 +6,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // El frontend se sirve desde este mismo servidor, pero tambien llama a
+  // PostgREST en otro puerto. CORS permite esa llamada entre origenes.
+  app.enableCors();
+
   // Validacion global: los DTOs con decoradores de class-validator
   // se aplican solos, sin escribir un if a mano en el controlador.
   app.useGlobalPipes(

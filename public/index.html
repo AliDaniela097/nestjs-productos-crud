@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo de Productos</title>
+<style>
+  :root{
+    --bg:#f4f6fa; --panel:#ffffff; --panel-2:#f8fafc; --border:#dde3ed;
+    --text:#182234; --muted:#65718a; --accent:#2c5fd8; --accent-soft:#e8efff;
+    --ok:#1a7f4b; --ok-soft:#e2f5ea; --warn:#9a6212; --warn-soft:#fdf1dc;
+    --err:#b3261e; --err-soft:#fdeaea; --code:#0f172a;
+    --get:#1a7f4b; --post:#2c5fd8; --put:#9a6212; --patch:#7a3fb5; --delete:#b3261e;
+    --radius:12px; --shadow:0 1px 2px rgba(16,24,40,.06),0 8px 24px rgba(16,24,40,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e131c; --panel:#161d2a; --panel-2:#1b2432; --border:#2a3547;
+      --text:#e8edf6; --muted:#97a3b8; --accent:#7ba4ff; --accent-soft:#1d2a44;
+      --ok:#5ed39a; --ok-soft:#14301f; --warn:#f0c070; --warn-soft:#332714;
+      --err:#ff8a80; --err-soft:#3a1a18; --code:#0a0f18;
+      --get:#5ed39a; --post:#7ba4ff; --put:#f0c070; --patch:#c9a0f5; --delete:#ff8a80;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e131c; --panel:#161d2a; --panel-2:#1b2432; --border:#2a3547;
+    --text:#e8edf6; --muted:#97a3b8; --accent:#7ba4ff; --accent-soft:#1d2a44;
+    --ok:#5ed39a; --ok-soft:#14301f; --warn:#f0c070; --warn-soft:#332714;
+    --err:#ff8a80; --err-soft:#3a1a18; --code:#0a0f18;
+    --get:#5ed39a; --post:#7ba4ff; --put:#f0c070; --patch:#c9a0f5; --delete:#ff8a80;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 16px 64px}
+
+  header.top{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;margin-bottom:8px}
+  h1{font-size:1.6rem;margin:0;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:.9rem;margin:4px 0 0}
+
+  .switch{display:flex;gap:4px;background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:4px}
+  .switch button{
+    border:0;background:transparent;color:var(--muted);font:inherit;font-size:.85rem;
+    padding:8px 14px;border-radius:7px;cursor:pointer;font-weight:600;white-space:nowrap;
+  }
+  .switch button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+  .banner{
+    margin:20px 0;padding:12px 16px;border-radius:var(--radius);
+    background:var(--accent-soft);border:1px solid var(--border);
+    font-size:.85rem;color:var(--text);display:flex;gap:10px;align-items:baseline;flex-wrap:wrap
+  }
+  .banner code{background:transparent;color:var(--accent);font-weight:600}
+
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:20px;align-items:start}
+  @media (max-width:940px){.grid{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+  .card h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    margin:0;padding:14px 18px;border-bottom:1px solid var(--border);background:var(--panel-2)}
+  .card .body{padding:18px}
+
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--muted);padding:10px 18px;border-bottom:1px solid var(--border);font-weight:600}
+  td{padding:11px 18px;border-bottom:1px solid var(--border);vertical-align:middle}
+  tr:last-child td{border-bottom:0}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  td.id{color:var(--muted);font-variant-numeric:tabular-nums;width:48px}
+  .acciones{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+
+  button.verb{
+    border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+    font:inherit;font-size:.72rem;font-weight:700;letter-spacing:.04em;
+    padding:5px 9px;border-radius:6px;cursor:pointer;
+  }
+  button.verb:hover{border-color:currentColor}
+  button.verb:disabled{opacity:.45;cursor:not-allowed}
+  .v-GET{color:var(--get)} .v-POST{color:var(--post)} .v-PUT{color:var(--put)}
+  .v-PATCH{color:var(--patch)} .v-DELETE{color:var(--delete)}
+
+  form.crear{display:grid;grid-template-columns:1fr 130px auto;gap:10px;align-items:end}
+  @media (max-width:560px){form.crear{grid-template-columns:1fr}}
+  label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:5px;font-weight:600}
+  input{
+    width:100%;padding:9px 11px;border-radius:8px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--text);font:inherit;font-size:.9rem
+  }
+  input:focus{outline:2px solid var(--accent);outline-offset:1px}
+  button.primary{
+    border:0;background:var(--accent);color:#fff;font:inherit;font-weight:600;font-size:.88rem;
+    padding:10px 18px;border-radius:8px;cursor:pointer;white-space:nowrap
+  }
+  button.primary:hover{filter:brightness(1.08)}
+
+  /* Consola de peticiones */
+  .req-linea{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .metodo{font-size:.72rem;font-weight:800;letter-spacing:.05em;padding:4px 8px;
+    border-radius:5px;border:1px solid currentColor}
+  .url{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.78rem;
+    color:var(--muted);word-break:break-all;flex:1;min-width:120px}
+  .badge{font-size:.78rem;font-weight:800;padding:4px 10px;border-radius:5px;font-variant-numeric:tabular-nums}
+  .b2{background:var(--ok-soft);color:var(--ok)}
+  .b4{background:var(--warn-soft);color:var(--warn)}
+  .b5{background:var(--err-soft);color:var(--err)}
+  .significado{font-size:.8rem;color:var(--muted);margin:0 0 12px}
+  pre{
+    background:var(--code);color:#d8e2f2;padding:13px;border-radius:9px;
+    font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.76rem;
+    overflow:auto;max-height:260px;margin:0;line-height:1.55;white-space:pre-wrap;word-break:break-word
+  }
+  .hdr{font-size:.74rem;color:var(--muted);margin:10px 0 0;
+    font-family:ui-monospace,Consolas,monospace;word-break:break-all}
+  .hdr b{color:var(--accent);font-weight:700}
+
+  .hist{list-style:none;margin:0;padding:0;font-size:.8rem}
+  .hist li{display:flex;gap:8px;align-items:center;padding:7px 18px;border-bottom:1px solid var(--border)}
+  .hist li:last-child{border-bottom:0}
+  .hist .metodo{font-size:.65rem;padding:2px 6px}
+  .hist .badge{font-size:.7rem;padding:2px 7px}
+  .hist .t{color:var(--muted);font-size:.72rem;margin-left:auto;font-variant-numeric:tabular-nums}
+
+  .vacio{color:var(--muted);font-size:.86rem;padding:22px 18px;text-align:center}
+  footer{margin-top:28px;color:var(--muted);font-size:.78rem;text-align:center}
+  footer a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Catálogo de Productos</h1>
+      <p class="sub">Semana 2 · Integración de Sistemas · CRUD sobre PostgreSQL</p>
+    </div>
+    <div class="switch" role="group" aria-label="Mecanismo de integración">
+      <button id="btn-nest" aria-pressed="true">API NestJS</button>
+      <button id="btn-pgrst" aria-pressed="false">PostgREST</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="grid">
+
+    <div>
+      <section class="card">
+        <h2>Productos</h2>
+        <div id="tabla-cont"><p class="vacio">Cargando…</p></div>
+      </section>
+
+      <section class="card" style="margin-top:20px">
+        <h2>Crear producto · POST</h2>
+        <div class="body">
+          <form class="crear" id="form-crear">
+            <div>
+              <label for="f-nombre">Nombre</label>
+              <input id="f-nombre" placeholder="Audífonos bluetooth" required>
+            </div>
+            <div>
+              <label for="f-precio">Precio</label>
+              <input id="f-precio" type="number" step="0.01" placeholder="25.00" required>
+            </div>
+            <button class="primary" type="submit">Crear</button>
+          </form>
+          <p class="sub" style="margin-top:12px">
+            Deja el nombre vacío o pon un precio negativo para ver la respuesta 400 de validación.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <div>
+      <section class="card">
+        <h2>Última petición</h2>
+        <div class="body" id="consola">
+          <p class="vacio" style="padding:0">Todavía no has hecho ninguna petición.</p>
+        </div>
+      </section>
+
+      <section class="card" style="margin-top:20px">
+        <h2>Historial</h2>
+        <ul class="hist" id="historial"><li class="vacio" style="display:block">Sin peticiones aún.</li></ul>
+      </section>
+    </div>
+
+  </div>
+
+  <footer>
+    Documentación interactiva: <a href="/swagger" target="_blank" rel="noopener">Swagger UI</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // Configuracion de los dos mecanismos de integracion
+  // ---------------------------------------------------------------
+  var MODOS = {
+    nest: {
+      nombre: "API NestJS",
+      descripcion: "API REST escrita a mano. Valida con DTOs, devuelve códigos de estado explícitos y enlaces HATEOAS.",
+      base: "/api/v1/productos",
+      uriLista:  function(){ return this.base; },
+      uriItem:   function(id){ return this.base + "/" + id; },
+      cuerpoPut: function(p){ return { nombre: p.nombre, precio: p.precio }; },
+      extraHeaders: function(){ return {}; }
+    },
+    pgrst: {
+      nombre: "PostgREST",
+      descripcion: "API generada automáticamente desde el esquema de PostgreSQL. Los permisos viven en la base, no en el código.",
+      base: (window.POSTGREST_URL || "http://localhost:3001") + "/productos",
+      uriLista:  function(){ return this.base + "?order=id.asc"; },
+      uriItem:   function(id){ return this.base + "?id=eq." + id; },
+      cuerpoPut: function(p){ return { id: p.id, nombre: p.nombre, precio: p.precio }; },
+      extraHeaders: function(){ return { "Prefer": "return=representation" }; }
+    }
+  };
+
+  var modo = "nest";
+  var productos = [];
+  var historial = [];
+
+  var SIGNIFICADO = {
+    200: "OK — operación exitosa, con cuerpo en la respuesta.",
+    201: "Created — recurso creado. Debe incluir la cabecera Location.",
+    204: "No Content — operación exitosa, sin cuerpo que devolver.",
+    400: "Bad Request — la petición es inválida. El error es del cliente.",
+    404: "Not Found — el recurso no existe en esa URI.",
+    406: "Not Acceptable — no se puede representar el resultado como se pidió.",
+    409: "Conflict — estado inconsistente o duplicado.",
+    500: "Internal Server Error — falla no controlada del servidor."
+  };
+
+  function $(id){ return document.getElementById(id); }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function claseBadge(c){ return c >= 500 ? "b5" : c >= 400 ? "b4" : "b2"; }
+
+  // ---------------------------------------------------------------
+  // Motor de peticiones: cada llamada se registra en la consola
+  // ---------------------------------------------------------------
+  function pedir(metodo, url, cuerpo){
+    var cfg = MODOS[modo];
+    var opciones = { method: metodo, headers: {} };
+
+    if (cuerpo !== undefined){
+      opciones.headers["Content-Type"] = "application/json";
+      opciones.body = JSON.stringify(cuerpo);
+    }
+    var extra = cfg.extraHeaders();
+    for (var k in extra){ if (extra.hasOwnProperty(k)) opciones.headers[k] = extra[k]; }
+
+    var inicio = performance.now();
+
+    return fetch(url, opciones).then(function(res){
+      return res.text().then(function(texto){
+        var ms = Math.round(performance.now() - inicio);
+        var datos = null;
+        if (texto){ try { datos = JSON.parse(texto); } catch(e){ datos = texto; } }
+
+        mostrar({
+          metodo: metodo, url: url, codigo: res.status, ms: ms,
+          location: res.headers.get("Location"),
+          contentRange: res.headers.get("Content-Range"),
+          cuerpoEnviado: cuerpo,
+          cuerpoRecibido: datos,
+          hayCuerpo: texto.length > 0
+        });
+
+        return { ok: res.ok, codigo: res.status, datos: datos };
+      });
+    }).catch(function(err){
+      mostrar({
+        metodo: metodo, url: url, codigo: 0, ms: 0,
+        cuerpoRecibido: "No se pudo conectar: " + err.message +
+          "\n\nRevisa que el servicio esté levantado y que permita CORS.",
+        hayCuerpo: true
+      });
+      return { ok:false, codigo:0, datos:null };
+    });
+  }
+
+  function mostrar(r){
+    var partes = [];
+    partes.push(
+      '<div class="req-linea">' +
+        '<span class="metodo v-' + r.metodo + '">' + r.metodo + '</span>' +
+        '<span class="url">' + esc(r.url) + '</span>' +
+        '<span class="badge ' + claseBadge(r.codigo) + '">' +
+          (r.codigo === 0 ? "sin red" : r.codigo) +
+        '</span>' +
+      '</div>'
+    );
+
+    if (SIGNIFICADO[r.codigo]){
+      partes.push('<p class="significado">' + esc(SIGNIFICADO[r.codigo]) + '</p>');
+    }
+
+    if (r.cuerpoEnviado !== undefined && r.cuerpoEnviado !== null){
+      partes.push('<p class="hdr" style="margin-bottom:6px"><b>Cuerpo enviado</b></p>');
+      partes.push('<pre>' + esc(JSON.stringify(r.cuerpoEnviado, null, 2)) + '</pre>');
+      partes.push('<p class="hdr" style="margin-bottom:6px;margin-top:12px"><b>Respuesta</b></p>');
+    }
+
+    if (r.hayCuerpo){
+      var txt = typeof r.cuerpoRecibido === "string"
+        ? r.cuerpoRecibido
+        : JSON.stringify(r.cuerpoRecibido, null, 2);
+      partes.push('<pre>' + esc(txt) + '</pre>');
+    } else {
+      partes.push('<pre>(sin cuerpo — así debe responder un 204)</pre>');
+    }
+
+    if (r.location){
+      partes.push('<p class="hdr"><b>Location:</b> ' + esc(r.location) + '</p>');
+    }
+    if (r.contentRange){
+      partes.push('<p class="hdr"><b>Content-Range:</b> ' + esc(r.contentRange) + '</p>');
+    }
+    if (r.ms){
+      partes.push('<p class="hdr" style="margin-top:8px">' + r.ms + ' ms</p>');
+    }
+
+    $("consola").innerHTML = partes.join("");
+
+    historial.unshift(r);
+    if (historial.length > 12) historial.pop();
+    pintarHistorial();
+  }
+
+  function pintarHistorial(){
+    if (!historial.length){
+      $("historial").innerHTML = '<li class="vacio" style="display:block">Sin peticiones aún.</li>';
+      return;
+    }
+    $("historial").innerHTML = historial.map(function(h){
+      return '<li>' +
+        '<span class="metodo v-' + h.metodo + '">' + h.metodo + '</span>' +
+        '<span class="badge ' + claseBadge(h.codigo) + '">' +
+          (h.codigo === 0 ? "—" : h.codigo) + '</span>' +
+        '<span class="t">' + (h.ms ? h.ms + " ms" : "") + '</span>' +
+      '</li>';
+    }).join("");
+  }
+
+  // ---------------------------------------------------------------
+  // Operaciones CRUD
+  // ---------------------------------------------------------------
+  function listar(){
+    var cfg = MODOS[modo];
+    return pedir("GET", cfg.uriLista()).then(function(r){
+      productos = Array.isArray(r.datos) ? r.datos : [];
+      pintarTabla();
+    });
+  }
+
+  function verUno(id){
+    pedir("GET", MODOS[modo].uriItem(id));
+  }
+
+  function crear(nombre, precio){
+    var cfg = MODOS[modo];
+    pedir("POST", cfg.base, { nombre: nombre, precio: precio }).then(listar);
+  }
+
+  function reemplazar(p){
+    var cfg = MODOS[modo];
+    var nombre = prompt("PUT reemplaza el recurso COMPLETO.\n\nNuevo nombre:", p.nombre);
+    if (nombre === null) return;
+    var precio = prompt("Nuevo precio:", p.precio);
+    if (precio === null) return;
+
+    var cuerpo = cfg.cuerpoPut({ id: p.id, nombre: nombre, precio: parseFloat(precio) });
+    pedir("PUT", cfg.uriItem(p.id), cuerpo).then(listar);
+  }
+
+  function parchear(p){
+    var precio = prompt("PATCH cambia solo el precio.\n\nNuevo precio:", p.precio);
+    if (precio === null) return;
+    pedir("PATCH", MODOS[modo].uriItem(p.id), { precio: parseFloat(precio) }).then(listar);
+  }
+
+  function eliminar(p){
+    if (!confirm('¿Eliminar "' + p.nombre + '"?\n\nRepite el DELETE después para comparar la respuesta.')) return;
+    pedir("DELETE", MODOS[modo].uriItem(p.id)).then(listar);
+  }
+
+  // ---------------------------------------------------------------
+  // Pintado de la tabla
+  // ---------------------------------------------------------------
+  function pintarTabla(){
+    if (!productos.length){
+      $("tabla-cont").innerHTML = '<p class="vacio">No hay productos. Crea uno con el formulario de abajo.</p>';
+      return;
+    }
+    var filas = productos.map(function(p, i){
+      return '<tr>' +
+        '<td class="id">' + esc(p.id) + '</td>' +
+        '<td>' + esc(p.nombre) + '</td>' +
+        '<td class="num">$ ' + Number(p.precio).toFixed(2) + '</td>' +
+        '<td><div class="acciones">' +
+          '<button class="verb v-GET"    data-a="ver"    data-i="' + i + '">GET</button>' +
+          '<button class="verb v-PUT"    data-a="put"    data-i="' + i + '">PUT</button>' +
+          '<button class="verb v-PATCH"  data-a="patch"  data-i="' + i + '">PATCH</button>' +
+          '<button class="verb v-DELETE" data-a="delete" data-i="' + i + '">DELETE</button>' +
+        '</div></td>' +
+      '</tr>';
+    }).join("");
+
+    $("tabla-cont").innerHTML =
+      '<table><thead><tr>' +
+        '<th>Id</th><th>Nombre</th><th style="text-align:right">Precio</th>' +
+        '<th style="text-align:right">Verbos HTTP</th>' +
+      '</tr></thead><tbody>' + filas + '</tbody></table>';
+  }
+
+  // Delegacion de eventos: un solo listener para toda la tabla
+  $("tabla-cont").addEventListener("click", function(ev){
+    var b = ev.target.closest("button[data-a]");
+    if (!b) return;
+    var p = productos[parseInt(b.getAttribute("data-i"), 10)];
+    if (!p) return;
+    var a = b.getAttribute("data-a");
+    if (a === "ver")    verUno(p.id);
+    if (a === "put")    reemplazar(p);
+    if (a === "patch")  parchear(p);
+    if (a === "delete") eliminar(p);
+  });
+
+  $("form-crear").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var nombre = $("f-nombre").value;
+    var precioTexto = $("f-precio").value;
+    // No se valida en el navegador a proposito: queremos que el 400
+    // lo devuelva el servidor y se vea en la consola.
+    crear(nombre, precioTexto === "" ? null : parseFloat(precioTexto));
+    $("f-nombre").value = "";
+    $("f-precio").value = "";
+  });
+
+  // ---------------------------------------------------------------
+  // Cambio de mecanismo
+  // ---------------------------------------------------------------
+  function cambiar(nuevo){
+    modo = nuevo;
+    $("btn-nest").setAttribute("aria-pressed", String(nuevo === "nest"));
+    $("btn-pgrst").setAttribute("aria-pressed", String(nuevo === "pgrst"));
+    var cfg = MODOS[modo];
+    $("banner").innerHTML =
+      "<strong>" + esc(cfg.nombre) + "</strong>" +
+      "<span>" + esc(cfg.descripcion) + "</span>" +
+      "<code>" + esc(cfg.base) + "</code>";
+    listar();
+  }
+
+  $("btn-nest").addEventListener("click", function(){ cambiar("nest"); });
+  $("btn-pgrst").addEventListener("click", function(){ cambiar("pgrst"); });
+
+  cambiar("nest");
+})();
+</script>
+</body>
+</html>

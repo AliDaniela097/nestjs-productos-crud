@@ -17,6 +17,16 @@ Contrato API-first definido **antes** de implementar. Prefijo de versión: `/api
 { "id": 1, "nombre": "Teclado mecánico", "precio": 45.9 }
 ```
 
+Persistido en la tabla `api.productos` de PostgreSQL:
+
+```sql
+id     SERIAL PRIMARY KEY
+nombre TEXT           NOT NULL CHECK (length(trim(nombre)) > 0)
+precio NUMERIC(10,2)  NOT NULL CHECK (precio > 0)
+```
+
+Las restricciones `CHECK` replican en la base las mismas reglas que los DTOs validan en la aplicación. La doble validación es deliberada: los DTOs protegen la frontera de NestJS, pero la base es la que protege el dato cuando otro sistema escribe sin pasar por la aplicación.
+
 ## Cuerpos de entrada
 
 - **POST y PUT** (`CrearProductoDto`): `nombre` (string, no vacío) y `precio` (number, positivo). Ambos obligatorios.
